@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t cokerms/multi-docker -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true cokerms/multi-docker npm run test
+
+after_success:
+  - docker build -t cokerms/multi-docker-client ./client
+  - docker build -t cokerms/multi-docker-nginx ./nginx
+  - docker build -t cokerms/multi-docker-server ./server
+  - docker build -t cokerms/multi-docker-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push cokerms/multi-docker-client
+  - docker push cokerms/multi-docker-nginx
+  - docker push cokerms/multi-docker-server
+  - docker push cokerms/multi-docker-worker
